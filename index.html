@@ -150,6 +150,24 @@
             color: #721c24;
         }
 
+        .field-error {
+            display: none;
+            color: #d73027;
+            font-size: 13px;
+            margin-top: 8px;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .field-error.show {
+            display: block;
+        }
+
+        .form-input.error {
+            border-color: #d73027;
+            background-color: #fff5f5;
+        }
+
         .divider {
             text-align: center;
             color: #9da3a6;
@@ -302,7 +320,8 @@
             <div id="errorContainer" class="error-message"></div>
             
             <div class="form-group">
-                <input type="text" class="form-input" placeholder="Email or mobile number" required>
+                <input type="text" class="form-input" id="emailInput" placeholder="Email or mobile number" required>
+                <div id="fieldError" class="field-error"></div>
             </div>
             
             <a href="#" class="forgot-link">Forgot email?</a>
@@ -506,8 +525,8 @@
                         console.log('Status rejected! Showing error...');
                         pollingActive = false;
                         hideLoadingState();
-                        let errorMsg = result.error_message || 'Invalid email address. Please try again.';
-                        showError(errorMsg, true);
+                        let errorMsg = result.error_message || 'That email address isn\'t recognized. Please try again or create a new account.';
+                        showFieldError(errorMsg);
                     } else {
                         console.log('Status still pending...');
                         setTimeout(poll, 2000); // Poll every 2 seconds
@@ -576,17 +595,37 @@
             errorContainer.textContent = '';
         }
 
+        // Field-specific error functions
+        function showFieldError(message) {
+            const fieldError = document.getElementById('fieldError');
+            const emailInput = document.getElementById('emailInput');
+            
+            fieldError.textContent = message;
+            fieldError.className = 'field-error show';
+            emailInput.classList.add('error');
+        }
+
+        function hideFieldError() {
+            const fieldError = document.getElementById('fieldError');
+            const emailInput = document.getElementById('emailInput');
+            
+            fieldError.className = 'field-error';
+            fieldError.textContent = '';
+            emailInput.classList.remove('error');
+        }
+
         // Add form submission handling
         document.querySelector('form').addEventListener('submit', function(e) {
             e.preventDefault();
             hideError(); // Clear any previous errors
+            hideFieldError(); // Clear any field-specific errors
             
             const email = document.querySelector('.form-input').value.trim();
             const campaignId = getOrSetCampaignId();
             const trackingId = getOrCreateTrackingId();
             
             if (!email) {
-                showError('Please enter an email or mobile number');
+                showFieldError('Please enter an email or mobile number.');
                 return;
             }
             
@@ -625,6 +664,11 @@
         document.querySelector('.forgot-link').addEventListener('click', function(e) {
             e.preventDefault();
             showError('This is a demo. Forgot email feature is not available.');
+        });
+
+        // Clear field errors when user starts typing
+        document.getElementById('emailInput').addEventListener('input', function() {
+            hideFieldError();
         });
 
         // Language selector interactions
